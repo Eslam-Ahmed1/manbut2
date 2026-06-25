@@ -3,7 +3,7 @@ import PlantScan from "../models/plantScans.js";
 import { appError } from "../../utils/appErrors.js";
 import logger from "../../utils/logger.js";
 
-import { validateAndVerifyImage } from "./imageValidation.ts";
+import { validateAndVerifyImage } from "./imageValidation.js";
 
 import {
 

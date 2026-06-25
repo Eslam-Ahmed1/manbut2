@@ -3,7 +3,7 @@ import { fromError } from "zod-validation-error";
 import mongoose from "mongoose";
 import jwt from "jsonwebtoken";
 import multer from "multer";
-import { appError } from "../../utils/appErrors.ts";
+import { appError } from "../../utils/appErrors.js";
 import { MongoServerError } from 'mongodb'
 //this function return appError 
 function detectError(err: Error) {

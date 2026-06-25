@@ -1,7 +1,7 @@
 import express, { type RequestHandler, type Response, type Request, type NextFunction } from 'express';
 import multer from 'multer';
-import Authorization from '../middlewares/authMiddleware.ts';
-import { analyzePlantImageController, getScanHistoryController, getScanHistoryByPlantIdController } from '../controllers/scan.ts';
+import Authorization from '../middlewares/authMiddleware.js';
+import { analyzePlantImageController, getScanHistoryController, getScanHistoryByPlantIdController } from '../controllers/scan.js';
 
 const router = express.Router();
 
