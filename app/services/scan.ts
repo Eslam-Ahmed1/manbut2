@@ -1,6 +1,9 @@
 import PlantScan from "../models/plantScans.js";
 
 import { appError } from "../../utils/appErrors.js";
+import logger from "../../utils/logger.js";
+
+import { validateAndVerifyImage } from "./imageValidation.js";
 
 import {
 
@@ -28,11 +31,14 @@ const analyzePlantImage = async (userId: string, imageBuffer: Buffer, mimeType: 
 
     const startTime = Date.now();
 
-    console.log(`\n🔍 [SCAN] Starting — user: ${userId}`);
+    logger.debug(`\n🔍 [SCAN] Starting — user: ${userId}`);
 
 
 
     try {
+
+        // 🛡️ Layer 1 + 2: Validate file & verify it's a plant image
+        await validateAndVerifyImage(imageBuffer, mimeType);
 
         const { diseases: detectedDiseases, meta } = await detectDiseasesFromImage(
 
@@ -46,11 +52,11 @@ const analyzePlantImage = async (userId: string, imageBuffer: Buffer, mimeType: 
 
         if (detectedDiseases.length === 0) {
 
-            console.log(`   🌿 [SCAN] Plant is healthy — no diseases detected`);
+            logger.debug(`   🌿 [SCAN] Plant is healthy — no diseases detected`);
 
         } else {
 
-            console.log(
+            logger.debug(
 
                 `   🦠 [SCAN] Detected ${detectedDiseases.length} disease(s) via ${meta.source}: ${detectedDiseases.map((d) => d.name).join(", ")}`,
 
@@ -68,7 +74,7 @@ const analyzePlantImage = async (userId: string, imageBuffer: Buffer, mimeType: 
 
         for (const d of detectedDiseases) {
 
-            console.log(`\n   📋 [SCAN] Processing: "${d.name}"`);
+            logger.debug(`\n   📋 [SCAN] Processing: "${d.name}"`);
 
 
 
@@ -98,11 +104,7 @@ const analyzePlantImage = async (userId: string, imageBuffer: Buffer, mimeType: 
 
                 );
 
-                console.log(
-
-                    `      🆕 New disease saved for future scans — response: names only, no products`,
-
-                );
+                logger.debug(`      🆕 New disease saved for future scans — response: names only, no products`);
 
                 continue;
 
@@ -110,7 +112,7 @@ const analyzePlantImage = async (userId: string, imageBuffer: Buffer, mimeType: 
 
 
 
-            console.log(`      ✅ Disease found in DB: "${existingDisease.name}"`);
+            logger.debug(`      ✅ Disease found in DB: "${existingDisease.name}"`);
 
             diseaseIds.push(existingDisease._id);
 
@@ -130,11 +132,7 @@ const analyzePlantImage = async (userId: string, imageBuffer: Buffer, mimeType: 
 
             );
 
-            console.log(
-
-                `      💊 Treatments in DB: ${diseaseTreatments.length}, products: ${productCount}`,
-
-            );
+            logger.debug(`      💊 Treatments in DB: ${diseaseTreatments.length}, products: ${productCount}`);
 
 
 
@@ -152,7 +150,7 @@ const analyzePlantImage = async (userId: string, imageBuffer: Buffer, mimeType: 
 
         try {
 
-            console.log(`\n   ⏳ [SCAN] Uploading to Cloudinary...`);
+            logger.debug(`\n   ⏳ [SCAN] Uploading to Cloudinary...`);
 
             const t2 = Date.now();
 
@@ -160,11 +158,11 @@ const analyzePlantImage = async (userId: string, imageBuffer: Buffer, mimeType: 
 
             imageUrl = uploadResult.secure_url;
 
-            console.log(`   ✅ [SCAN] Cloudinary done in ${Date.now() - t2}ms`);
+            logger.debug(`   ✅ [SCAN] Cloudinary done in ${Date.now() - t2}ms`);
 
         } catch (error) {
 
-            console.error(`   ❌ [SCAN] Cloudinary upload failed:`, error);
+            logger.error(`   ❌ [SCAN] Cloudinary upload failed:`, error);
 
         }
 
@@ -188,9 +186,9 @@ const analyzePlantImage = async (userId: string, imageBuffer: Buffer, mimeType: 
 
         const totalProducts = optimizedDetected.reduce((s, t) => s + t.products.length, 0);
 
-        console.log(
+        logger.info(
 
-            `\n   ✅ [SCAN] Complete — ${detectedDiseases.length} disease(s), ${optimizedDetected.length} treatment(s), ${totalProducts} product(s), source: ${meta.source} — ${Date.now() - startTime}ms\n`,
+            `✅ [SCAN] Complete — user: ${userId}, ${detectedDiseases.length} disease(s), source: ${meta.source} — ${Date.now() - startTime}ms`,
 
         );
 
@@ -234,11 +232,19 @@ const analyzePlantImage = async (userId: string, imageBuffer: Buffer, mimeType: 
 
         };
 
-    } catch (error) {
+    } catch (error: any) {
 
-        console.error(`   ❌ [SCAN] Failed after ${Date.now() - startTime}ms:`, error);
+        logger.error(`❌ [SCAN] Failed after ${Date.now() - startTime}ms:`, error);
 
-        throw new appError("Failed to analyze image or save to database", 500);
+        if (error instanceof appError || (error && error.isOperational === true)) {
+            throw error;
+        }
+
+        const wrappedError = new appError("Failed to analyze image or save to database", 500);
+        if (error instanceof Error) {
+            wrappedError.stack = error.stack;
+        }
+        throw wrappedError;
 
     }
 
@@ -371,4 +377,3 @@ const getScanHistoryByPlantId = getScanById;
 
 
 export { analyzePlantImage, getScanHistory, getScanById, getScanHistoryByPlantId };
-

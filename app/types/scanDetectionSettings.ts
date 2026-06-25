@@ -1,5 +1,10 @@
 export type ScanDetectionMode = "gemini_only" | "plant_model_only" | "hybrid";
 
+export type ImageValidationSettings = {
+    enabled: boolean;
+    confidenceThreshold: number;
+};
+
 export type ScanDetectionSettings = {
     mode: ScanDetectionMode;
     plantModel: {
@@ -14,6 +19,7 @@ export type ScanDetectionSettings = {
         enabled: boolean;
         model: string;
     };
+    imageValidation: ImageValidationSettings;
 };
 
 export type ScanDetectionSettingsUpdate = {
@@ -24,4 +30,7 @@ export type ScanDetectionSettingsUpdate = {
     alwaysAttempt?: boolean;
     supportedPlants?: string[];
     geminiEnabled?: boolean;
+    imageValidationEnabled?: boolean;
+    plantCheckConfidenceThreshold?: number;
 };
+

@@ -152,7 +152,14 @@ If multiple diseases detected, include all of them.
     }
     catch (error) {
         console.log(error);
-        throw new appError("Failed to analyze image or save to database", 500);
+        if (error instanceof appError || (error && error.isOperational === true)) {
+            throw error;
+        }
+        const wrappedError = new appError("Failed to analyze image or save to database", 500);
+        if (error instanceof Error) {
+            wrappedError.stack = error.stack;
+        }
+        throw wrappedError;
     }
 };
 export { analyzePlantImageImproved };

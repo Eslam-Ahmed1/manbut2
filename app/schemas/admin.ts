@@ -172,5 +172,8 @@ export const updateScanDetectionSettingsSchema = z.object({
         alwaysAttempt: z.boolean().optional(),
         supportedPlants: z.array(z.string().min(1)).optional(),
         geminiEnabled: z.boolean().optional(),
+        imageValidationEnabled: z.boolean().optional(),
+        plantCheckConfidenceThreshold: z.number().min(0).max(1).optional(),
     }),
 });
+

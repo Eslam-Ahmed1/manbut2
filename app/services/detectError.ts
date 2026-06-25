@@ -2,10 +2,20 @@ import { array, string, ZodError } from "zod";
 import { fromError } from "zod-validation-error";
 import mongoose from "mongoose";
 import jwt from "jsonwebtoken";
+import multer from "multer";
 import { appError } from "../../utils/appErrors.js";
 import { MongoServerError } from 'mongodb'
 //this function return appError 
 function detectError(err: Error) {
+    // multer errors (file upload)
+    if (err instanceof multer.MulterError) {
+        if (err.code === 'LIMIT_FILE_SIZE')
+            return new appError('File too large. Maximum allowed size is 10 MB.', 400);
+        return new appError(`Upload error: ${err.message}`, 400);
+    }
+    // multer fileFilter rejection (thrown as generic Error)
+    if (err.message && err.message.includes('Unsupported file type'))
+        return new appError(err.message, 400);
     // zod errors
     if (err instanceof ZodError)
         return new appError(fromError(err).message, 400)

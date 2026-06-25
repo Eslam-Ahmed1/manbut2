@@ -1,6 +1,7 @@
 import { getConfig, setConfig } from "./config.js";
 import { appError } from "../../utils/appErrors.js";
 import type {
+    ImageValidationSettings,
     ScanDetectionMode,
     ScanDetectionSettings,
     ScanDetectionSettingsUpdate,
@@ -16,6 +17,8 @@ export const SCAN_DETECTION_CONFIG_KEYS = {
     PLANT_MODEL_ALWAYS_ATTEMPT: "PLANT_MODEL_ALWAYS_ATTEMPT",
     PLANT_MODEL_SUPPORTED_PLANTS: "PLANT_MODEL_SUPPORTED_PLANTS",
     GEMINI_SCAN_ENABLED: "GEMINI_SCAN_ENABLED",
+    IMAGE_VALIDATION_ENABLED: "IMAGE_VALIDATION_ENABLED",
+    PLANT_CHECK_CONFIDENCE_THRESHOLD: "PLANT_CHECK_CONFIDENCE_THRESHOLD",
 } as const;
 
 const DEFAULT_HF_URL =
@@ -105,7 +108,27 @@ export const getScanDetectionSettings =
                 enabled: geminiEnabled && mode !== "plant_model_only",
                 model: "gemini-2.5-flash",
             },
+            imageValidation: {
+                enabled: parseBool(
+                    await getConfig(SCAN_DETECTION_CONFIG_KEYS.IMAGE_VALIDATION_ENABLED, "true"),
+                    true,
+                ),
+                confidenceThreshold: parseFloatSafe(
+                    await getConfig(
+                        SCAN_DETECTION_CONFIG_KEYS.PLANT_CHECK_CONFIDENCE_THRESHOLD,
+                        "0.7",
+                    ),
+                    0.7,
+                ),
+            },
         };
+    };
+
+/** يقرأ إعدادات التحقق من الصورة فقط (يُستخدم من imageValidation service) */
+export const getImageValidationSettings =
+    async (): Promise<ImageValidationSettings> => {
+        const settings = await getScanDetectionSettings();
+        return settings.imageValidation;
     };
 
 export const getScanDetectionMode = async (): Promise<ScanDetectionMode> => {
@@ -203,6 +226,31 @@ export const updateScanDetectionSettings = async (
             SCAN_DETECTION_CONFIG_KEYS.PLANT_MODEL_SUPPORTED_PLANTS,
             normalized,
             "Comma-separated supported plant types",
+        );
+    }
+
+    if (input.imageValidationEnabled !== undefined) {
+        await setConfig(
+            SCAN_DETECTION_CONFIG_KEYS.IMAGE_VALIDATION_ENABLED,
+            String(input.imageValidationEnabled),
+            "Enable plant image pre-validation (reject non-plant images)",
+        );
+    }
+
+    if (input.plantCheckConfidenceThreshold !== undefined) {
+        if (
+            input.plantCheckConfidenceThreshold < 0 ||
+            input.plantCheckConfidenceThreshold > 1
+        ) {
+            throw new appError(
+                "plantCheckConfidenceThreshold must be between 0 and 1",
+                400,
+            );
+        }
+        await setConfig(
+            SCAN_DETECTION_CONFIG_KEYS.PLANT_CHECK_CONFIDENCE_THRESHOLD,
+            String(input.plantCheckConfidenceThreshold),
+            "Confidence threshold for plant image pre-check",
         );
     }
 
