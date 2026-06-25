@@ -74,9 +74,9 @@ const seedDiseases = async () => {
         }
         await mongoose.connect(mongoUri);
         console.log('✅ Connected to MongoDB');
-        // // Clear existing diseases
-        // await Disease.deleteMany({});
-        // console.log('🗑️  Cleared old diseases');
+        // Clear existing diseases
+        await Disease.deleteMany({});
+        console.log('🗑️  Cleared old diseases');
         let added = 0;
         let skipped = 0;
         for (const disease of diseases) {

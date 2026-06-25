@@ -1,8 +1,5 @@
 import mongoose from 'mongoose';
 import Disease from '../app/models/diseases.js';
-import connectDB from '../app/loaders/mongooseLoader.js';
-import dotenv from 'dotenv';
-dotenv.config();
 // ============================================================
 // PLANT DISEASES SEED - 150+ diseases across all categories
 // ============================================================
@@ -152,12 +149,9 @@ export const seedDiseases = async () => {
     return inserted;
 };
 // Run standalone only when executed directly
-const trigger = async () => {
-    if (process.argv[1].includes('diseases.seed')) {
-        console.log("HELLO");
-        await connectDB();
-        await seedDiseases();
-        await mongoose.disconnect();
-    }
+if (process.argv[1].includes('diseases.seed')) {
+    const connectDB = (await import('../app/loaders/mongooseLoader.js')).default;
+    await connectDB();
+    await seedDiseases();
+    await mongoose.disconnect();
 }
-trigger();
