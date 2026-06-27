@@ -3,9 +3,24 @@ import { authenticationController } from '../controllers/index.js';
 import Authorization from '../middlewares/authMiddleware.js'
 import { changePasswordSchema, loginSchema, registerSchema, forgotPasswordSchema, resetPasswordSchema } from '../schemas/authentication.js'
 import validate from '../middlewares/validationRequestMiddleware.js';
+import { sendvalidationEmail, verifiyEmail } from '../middlewares/validateEmail.js';
+
 let route = express.Router();
-//registeration route
-route.post('/register', validate({ bodySchema: registerSchema }) as RequestHandler, authenticationController.register as RequestHandler)
+
+// registration route with email validation middleware
+route.post(
+    '/register', 
+    validate({ bodySchema: registerSchema }) as RequestHandler, 
+    authenticationController.register as RequestHandler, 
+    sendvalidationEmail as RequestHandler
+);
+
+// email verification route
+route.post('/verify-email', verifiyEmail as RequestHandler);
+
+// resend email verification route
+route.post('/resend-verification-email', sendvalidationEmail as RequestHandler);
+
 route.post('/login', validate({ bodySchema: loginSchema }) as RequestHandler, authenticationController.login as RequestHandler)
 //middleware for check valid token 
 route.get('/user', Authorization as RequestHandler, authenticationController.user as RequestHandler)

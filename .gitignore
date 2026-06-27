@@ -14,6 +14,7 @@ logs/
 
 # Temp files and test outputs
 chat_test_output.json
+Auth_API_Docs.doc
 .DS_Store
 mock.json
 

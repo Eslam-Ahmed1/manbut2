@@ -25,12 +25,12 @@ const sendEmail = async (to: string, subject: string, htmlContent: string) => {
             }),
         });
 
-        const data:any = await response.json();
-        
+        const data: any = await response.json();
+
         if (!response.ok) {
             throw new Error(data.message || 'Failed to send email');
         }
-        
+
         console.log('✅ Email sent successfully:', data);
         return data;
     } catch (error) {
@@ -51,6 +51,13 @@ export const sendWelcomeEmail = async (email: string, name: string) => {
 export const sendPasswordResetEmail = async (email: string, token: string) => {
     const html = `
         <p>You requested a password reset. Your password reset token is: <strong>${token}</strong></p>
+        <p>If you didn't request this, you can safely ignore this email.</p>
+    `;
+    return sendEmail(email, 'Email validation Token', html);
+};
+export const sendEmailValidation = async (email: string, token: string) => {
+    const html = `
+        <p>Email validation token is: <strong>${token}</strong></p>
         <p>If you didn't request this, you can safely ignore this email.</p>
     `;
     return sendEmail(email, 'Password Reset Token', html);

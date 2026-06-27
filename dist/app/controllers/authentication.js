@@ -10,8 +10,10 @@ const register = async (req, res, next) => {
             email: req.body.email,
             password: req.body.password
         };
-        const token = await authenticationService.register(userDTO);
-        return res.status(201).json({ token });
+        await authenticationService.register(userDTO);
+        // Signal to the validateEmail middleware that this is a registration
+        res.locals.isRegister = true;
+        next();
     }
     catch (err) {
         next(err);

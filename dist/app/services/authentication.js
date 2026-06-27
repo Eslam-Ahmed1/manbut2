@@ -21,23 +21,16 @@ const register = async (userDTO) => {
     catch (error) {
         console.error('Failed to send welcome email:', error);
     }
-    const payload = {
-        _id: savedUser._id,
-        name: savedUser.name,
-        email: savedUser.email,
-        role: savedUser.role
-    };
-    if (!process.env.SECRET_TOKEN) {
-        throw new appError('Server configuration error: Missing secret token', 500);
-    }
-    const token = JWT.sign(payload, process.env.SECRET_TOKEN, { expiresIn: '5d' });
-    return token;
+    return savedUser;
 };
 const login = async (loginDTO) => {
     const { email, password } = loginDTO;
     const user = await User.findOne({ email: email });
     const isMatch = user && await bcrypt.compare(password, user.password);
     if (user && isMatch) {
+        if (!user.isEmailVerified) {
+            throw new appError('Please verify your email address before logging in.', 403);
+        }
         const payload = {
             _id: user._id,
             name: user.name,
