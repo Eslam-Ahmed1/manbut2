@@ -47,7 +47,7 @@ export const sendPasswordResetEmail = async (email, token) => {
         <p>You requested a password reset. Your password reset token is: <strong>${token}</strong></p>
         <p>If you didn't request this, you can safely ignore this email.</p>
     `;
-    return sendEmail(email, 'Password Reset Token', html);
+    return sendEmail(email, 'Email validation Token', html);
 };
 export const sendEmailValidation = async (email, token) => {
     const html = `

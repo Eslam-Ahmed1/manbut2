@@ -173,7 +173,10 @@ export const getDashboardStats = async () => {
 
 // --- USER MANAGEMENT ---
 export const getAllUsers = async (query: any = {}) => {
-    const result = await paginate<any>(User, {}, {
+    const result = await paginate<any>(User, {isEmailVerified: true}, {
+        // The 'condition' property is not a standard option for paginate.
+        // Assuming the intention was to filter by isEmailVerified,
+        // the condition should be passed as the second argument to paginate.
         page: query.page,
         limit: query.limit,
         select: '-password',
@@ -846,6 +849,7 @@ export const getAIScanStats = async () => {
 
 import { exec } from 'child_process';
 import { promisify } from 'util';
+import { isWeakMap } from "util/types";
 const execPromise = promisify(exec);
 
 export const runDatabaseSeeds = async () => {
