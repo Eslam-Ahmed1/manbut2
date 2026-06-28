@@ -4,7 +4,7 @@ import User from '../models/user.js';
 import JWT from 'jsonwebtoken';
 import bcrypt from 'bcrypt';
 import { appError } from '../../utils/appErrors.js';
-import { sendWelcomeEmail, sendPasswordResetEmail } from './email.js';
+import { sendPasswordResetEmail } from './email.js';
 const register = async (userDTO) => {
     const { name, email, password } = userDTO;
     let userExist = await User.findOne({ email: email });
@@ -15,12 +15,6 @@ const register = async (userDTO) => {
     const hashPassword = await bcrypt.hash(password, salt);
     let newUser = new User({ name: name, email: email, password: hashPassword });
     const savedUser = await newUser.save();
-    try {
-        await sendWelcomeEmail(savedUser.email, savedUser.name);
-    }
-    catch (error) {
-        console.error('Failed to send welcome email:', error);
-    }
     return savedUser;
 };
 const login = async (loginDTO) => {

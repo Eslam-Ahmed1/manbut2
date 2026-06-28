@@ -1,5 +1,5 @@
 import { type Response, type Request, type NextFunction } from 'express';
-import { sendEmailValidation } from '../services/email.js';
+import { sendEmailValidation, sendWelcomeEmail } from '../services/email.js';
 import User from '../models/user.js';
 import { appError } from '../../utils/appErrors.js';
 import JWT from 'jsonwebtoken';
@@ -21,7 +21,7 @@ export const sendvalidationEmail = async (req: Request, res: Response, next: Nex
         }
 
         const token = Math.floor(100000 + Math.random() * 900000).toString();
-        
+
         user.set('emailVerificationToken', token);
         user.set('emailVerificationExpires', new Date(Date.now() + 3600000)); // 1 hour expiration
         await user.save();
@@ -30,11 +30,11 @@ export const sendvalidationEmail = async (req: Request, res: Response, next: Nex
 
         // If this is the initial registration flow, send a 201 response.
         if (res.locals.isRegister) {
-            return res.status(201).json({ 
-                message: 'User registered successfully. Please check your email to verify your account.' 
+            return res.status(201).json({
+                message: 'User registered successfully. Please check your email to verify your account.'
             });
         }
-        
+
         res.status(200).json({ message: 'Validation email sent successfully' });
     } catch (error) {
         next(error);
@@ -62,6 +62,12 @@ export const verifiyEmail = async (req: Request, res: Response, next: NextFuncti
         user.set('emailVerificationToken', undefined);
         user.set('emailVerificationExpires', undefined);
         await user.save();
+        try {
+            await sendWelcomeEmail(email, user.name);
+        }
+        catch (error) {
+            throw new appError('Error sending welcome email', 500);
+        }
 
         // Generate the JWT token now that the user is verified
         if (!process.env.SECRET_TOKEN) {
@@ -77,13 +83,13 @@ export const verifiyEmail = async (req: Request, res: Response, next: NextFuncti
 
         const jwtToken = JWT.sign(
             payload,
-            process.env.SECRET_TOKEN as string,
+            process.env.SECRET_TOKEN as string,//signature
             { expiresIn: '5d' }
         );
 
-        res.status(200).json({ 
+        res.status(200).json({
             message: 'Email verified successfully',
-            token: jwtToken 
+            token: jwtToken
         });
     } catch (error) {
         next(error);

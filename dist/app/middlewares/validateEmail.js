@@ -1,4 +1,4 @@
-import { sendEmailValidation } from '../services/email.js';
+import { sendEmailValidation, sendWelcomeEmail } from '../services/email.js';
 import User from '../models/user.js';
 import { appError } from '../../utils/appErrors.js';
 import JWT from 'jsonwebtoken';
@@ -50,6 +50,12 @@ export const verifiyEmail = async (req, res, next) => {
         user.set('emailVerificationToken', undefined);
         user.set('emailVerificationExpires', undefined);
         await user.save();
+        try {
+            await sendWelcomeEmail(email, user.name);
+        }
+        catch (error) {
+            throw new appError('Error sending welcome email', 500);
+        }
         // Generate the JWT token now that the user is verified
         if (!process.env.SECRET_TOKEN) {
             throw new appError('Server configuration error: Missing secret token', 500);
@@ -60,7 +66,8 @@ export const verifiyEmail = async (req, res, next) => {
             email: user.email,
             role: user.role
         };
-        const jwtToken = JWT.sign(payload, process.env.SECRET_TOKEN, { expiresIn: '5d' });
+        const jwtToken = JWT.sign(payload, process.env.SECRET_TOKEN, //signature
+        { expiresIn: '5d' });
         res.status(200).json({
             message: 'Email verified successfully',
             token: jwtToken

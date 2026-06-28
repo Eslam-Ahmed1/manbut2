@@ -25,13 +25,7 @@ const register = async (userDTO: userDTO) => {
     const salt = await bcrypt.genSalt(10);
     const hashPassword = await bcrypt.hash(password, salt);
     let newUser = new User({ name: name, email: email, password: hashPassword });
-    const savedUser = await newUser.save();
-    try {
-        await sendWelcomeEmail(savedUser.email, savedUser.name);
-    } catch (error) {
-        console.error('Failed to send welcome email:', error);
-    }
-    
+    const savedUser = await newUser.save();    
     return savedUser;
 }
 const login = async (loginDTO: loginDTO) => {

@@ -40,13 +40,7 @@ const analyzePlantImage = async (userId: string, imageBuffer: Buffer, mimeType: 
         // 🛡️ Layer 1 + 2: Validate file & verify it's a plant image
         await validateAndVerifyImage(imageBuffer, mimeType);
 
-        const { diseases: detectedDiseases, meta } = await detectDiseasesFromImage(
-
-            imageBuffer,
-
-            mimeType,
-
-        );
+        const { diseases: detectedDiseases, meta } = await detectDiseasesFromImage(imageBuffer, mimeType);
 
 
 

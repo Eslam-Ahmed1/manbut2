@@ -60,7 +60,7 @@ export const sendEmailValidation = async (email: string, token: string) => {
         <p>Email validation token is: <strong>${token}</strong></p>
         <p>If you didn't request this, you can safely ignore this email.</p>
     `;
-    return sendEmail(email, 'Password Reset Token', html);
+    return sendEmail(email, 'Email validation token', html);
 };
 
 export const sendOrderReceipt = async (email: string, name: string, orderId: string, totalAmount: number) => {
